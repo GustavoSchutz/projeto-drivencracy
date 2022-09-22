@@ -5,4 +5,4 @@ const router = express.Router();
 
 router.use(pollRouter);
 
-export default router;
+export default router

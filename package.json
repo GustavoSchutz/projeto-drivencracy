@@ -5,8 +5,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js"
   },
-  "start": "index.js",
   "keywords": [],
   "author": "",
   "license": "ISC",
