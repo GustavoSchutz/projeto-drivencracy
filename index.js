@@ -1,10 +1,11 @@
-import express from "express";
+import express, { Router } from "express";
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { MongoClient } from "mongodb";
 import Joi from "joi";
 import dayjs from "dayjs";
 import { ObjectId } from "mongodb";
+
 
 const app = express();
 
@@ -13,11 +14,14 @@ app.use(express.json());
 dotenv.config();
 
 const mongoClient = new MongoClient(process.env.MONGO_URI);
-let db;
+export let db;
 
-mongoClient.connect().then(() => {
-    db = mongoClient.db("drivencracy");
-}).catch(() => console.log(error));
+mongoClient.connect()
+    .then(() => {
+        db = mongoClient.db("drivencracy");
+        console.log("MongoClient running")
+})
+.catch(() => console.log(error));
 
 app.post("/poll", async (req, res) => {
 
@@ -74,18 +78,57 @@ app.get("/poll", async (req, res) => {
 });
 
 app.post("/choice", async (req, res) => {
+
+    const choice = req.body;
+
+    const postChoiceSchema = Joi.object({
+        title: Joi.string().required(),
+        pollId: Joi.string().required()
+    });
+
+    const choiceValidation = postChoiceSchema.validate(choice);
+
+    if (choiceValidation.error) {
+        console.log(choiceValidation.error.details);
+        return res.sendStatus(422);
+    };
+
     const title = req.body.title;
     const pollId = req.body.pollId;
     const searchPollId = `ObjectId("${pollId}")`
     console.log(searchPollId);
+
     try {
-        const polls = await db.collection('poll').findOne({ _id : ObjectId(pollId) });
+
+        const polls = await db.collection('poll').findOne(
+            { _id: ObjectId(pollId) }
+        );
+
+        if (!polls) {
+            res.status(404).send(pollId);
+        } 
+
+        const choices = [];
+    
+        for(let i = 0; i < polls.choices?.length; i++) {
+            choices.push(polls.choices[i]);
+        };
+
+        choices.push({ title });
+
+        const addChoice = await db.collection('poll').updateOne(
+            { _id: ObjectId(pollId) },
+            {
+                $set: { choices }
+            }
+        );
         console.log(polls);
-        res.send(polls).status(200);
+        res.send(addChoice).status(200);
     } catch (error) {
         console.log(error);
         return res.sendStatus(500);
-    }
+    };
+
 });
 
 
