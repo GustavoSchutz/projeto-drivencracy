@@ -23,6 +23,10 @@ mongoClient.connect()
 })
 .catch(() => console.log(error));
 
+app.get("/status", (req, res) => {
+    res.send("ok").status(200);
+})
+
 app.post("/poll", async (req, res) => {
 
     const postPollSchema = Joi.object({
