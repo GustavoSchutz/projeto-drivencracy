@@ -1,9 +1,7 @@
 import express from 'express';
 import Joi from 'joi';
 import { ObjectId } from 'mongodb';
-
-
-
+import { db } from '../../index.js';
 
 export async function postChoice (req, res) {
 

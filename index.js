@@ -29,6 +29,4 @@ app.get("/status", (req, res) => {
 
 app.use(router);
 
-
-
 app.listen(process.env.PORT, () => console.log(`Magic happens on ${process.env.PORT}`));
