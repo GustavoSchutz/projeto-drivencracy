@@ -27,12 +27,17 @@ export async function postPoll(req, res) {
         console.log(poll.expireAt);
     }
 
+    if (!dayjs(poll.expireAt).isValid()) {
+        console.log(dayjs(poll.expireAt).isValid());
+        res.sendStatus(422);
+    }
+
     const title = poll.title;
     const expireAt = poll.expireAt;
 
     try {
 
-        await db.collection('poll').insertOne({
+        await db.collection('polls').insertOne({
             title,
             expireAt
         });
@@ -49,10 +54,26 @@ export async function postPoll(req, res) {
 
 export async function getPoll(req, res) {
     try {
-        const polls = await db.collection('poll').find({}).toArray();
+        const polls = await db.collection('polls').find({}).toArray();
         res.send(polls).status(200);
     } catch (error) {
         console.log(error);
         return res.sendStatus(500);
     }
 };
+
+export async function getPollChoice(req, res) {
+
+    const id = req.params.id;
+
+    try {
+        const poll = await db.collection('choices').find(
+            { pollId: id }
+        ).toArray();
+        res.send(poll).status(200);
+    } catch (error) {
+        console.log(error);
+        return res.sendStatus(500);
+    }
+
+}
