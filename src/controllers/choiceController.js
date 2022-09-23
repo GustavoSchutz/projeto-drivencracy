@@ -2,6 +2,7 @@ import express from 'express';
 import Joi from 'joi';
 import { ObjectId } from 'mongodb';
 import { db } from '../../index.js';
+import dayjs from 'dayjs';
 
 
 export async function postChoice(req, res) {
@@ -27,18 +28,54 @@ export async function postChoice(req, res) {
     );
 
     if (!polls) {
-        res.status(404).send(pollId);
+        return res.status(404).send(pollId);
     };
 
     try {
         const addChoice = await db.collection('choices').insertOne(choice);
-        res.sendStatus(201);
+        return res.sendStatus(201);
     } catch (error) {
         console.log(error);
         return res.sendStatus(500);
     };
 
+};
+
+export async function postVote(req, res) {
+    const id = req.params.id;
+    const today = dayjs(new Date());
+
+    const choice = await db.collection('choices').findOne({ _id: ObjectId(id) });
+
+    if (!choice) {
+        return res.sendStatus(404);
+    };
+
+    const poll = await db.collection('polls').find({ _id: ObjectId(choice.pollId) })
+
+    if (!poll) {
+        return res.sendStatus(404);
+    };
+
+    if (dayjs(poll.expireAt).isBefore(today)) {
+        return res.sendStatus(403);
+    };
+
+    try {
+        const vote = await db.collection('votes').insertOne({
+            choiceId: id,
+            title: choice.title,
+            date: today.format("YYYY-MM-DD HH:mm")
+        });
+        return res.sendStatus(201);
+    } catch (error) {
+        console.log(error);
+        return res.sendStatus(500);
+    }
+
 }
+
+
 
 
 // export async function postChoice (req, res) {

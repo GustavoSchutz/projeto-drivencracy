@@ -12,6 +12,7 @@ export async function postPoll(req, res) {
 
     const poll = req.body;
     const pollValidation = postPollSchema.validate(poll);
+    const today = dayjs(new Date());
 
     if (pollValidation.error) {
         console.log(pollValidation.error.details);
@@ -27,9 +28,9 @@ export async function postPoll(req, res) {
         console.log(poll.expireAt);
     }
 
-    if (!dayjs(poll.expireAt).isValid()) {
+    if (!dayjs(poll.expireAt).isValid() || dayjs(poll.expireAt).isBefore(today)) {
         console.log(dayjs(poll.expireAt).isValid());
-        res.sendStatus(422);
+        return res.sendStatus(422);
     }
 
     const title = poll.title;
@@ -42,13 +43,12 @@ export async function postPoll(req, res) {
             expireAt
         });
 
+        return res.sendStatus(201);
+
     } catch (error) {
         console.log(error);
         return res.sendStatus(500);
     }
-
-
-    res.sendStatus(201);
 
 };
 
@@ -76,4 +76,4 @@ export async function getPollChoice(req, res) {
         return res.sendStatus(500);
     }
 
-}
+};
