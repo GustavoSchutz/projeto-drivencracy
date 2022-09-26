@@ -53,7 +53,9 @@ export async function postPoll(req, res) {
 };
 
 export async function getPoll(req, res) {
+
     try {
+
         const polls = await db.collection('polls').find({}).toArray();
         res.send(polls).status(200);
     } catch (error) {
@@ -65,6 +67,13 @@ export async function getPoll(req, res) {
 export async function getPollChoice(req, res) {
 
     const id = req.params.id;
+
+    const polls = await db.collection('polls').findOne(
+        { _id: ObjectId(id) }
+    );
+    if (!polls) {
+        return res.sendStatus(404);
+    }
 
     try {
         const choices = await db.collection('choices').find(
@@ -87,6 +96,9 @@ export async function getResults(req, res) {
             { _id: ObjectId( id )}
         );
         console.log(poll);
+        if (!poll) {
+            return res.sendStatus(404);
+        }
         const pollTitle = poll.title;
         const pollExpireAt = poll.expireAt;
     

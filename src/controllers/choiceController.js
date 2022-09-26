@@ -19,6 +19,14 @@ export async function postChoice(req, res) {
         console.log(choiceValidation.error.details);
         return res.sendStatus(422);
     };
+    const choices = await db.collection('choices').findOne(
+        { pollId: choice.pollId , title: choice.title }
+    );
+
+    if (choices) {
+        return res.sendStatus(409);
+    }
+    
 
     const pollId = req.body.pollId;
     const title = req.body.title;
@@ -26,6 +34,12 @@ export async function postChoice(req, res) {
     const polls = await db.collection('polls').findOne(
         { _id: ObjectId(pollId) }
     );
+
+    const today = dayjs(new Date());
+    // if (polls.expireAt)
+    if (dayjs(polls.expireAt).isBefore(today)) {
+        return res.sendStatus(403);
+    };
 
     if (!polls) {
         return res.status(404).send(pollId);
