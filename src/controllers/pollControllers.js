@@ -67,13 +67,64 @@ export async function getPollChoice(req, res) {
     const id = req.params.id;
 
     try {
-        const poll = await db.collection('choices').find(
+        const choices = await db.collection('choices').find(
             { pollId: id }
         ).toArray();
-        res.send(poll).status(200);
+        res.send(choices).status(200);
     } catch (error) {
         console.log(error);
         return res.sendStatus(500);
     }
 
 };
+
+export async function getResults(req, res) {
+
+    const id = req.params.id;
+
+    try {
+        const poll = await db.collection('polls').findOne(
+            { _id: ObjectId( id )}
+        );
+        console.log(poll);
+        const pollTitle = poll.title;
+        const pollExpireAt = poll.expireAt;
+    
+        const choices = await db.collection('choices').find(
+            { pollId: id }
+        ).toArray();
+
+        let choicesIds = [];
+
+        for(let i = 0; i < choices.length; i++) {
+            console.log((choices[i]._id).toString());
+            choicesIds.push((choices[i]._id).toString());
+        }
+        console.log(choicesIds);
+
+        let mostVoted = 0;
+        let mostVotedId;
+        let totalOfVotes;
+        for(let i = 0; i < choicesIds.length; i++) {
+            const votesAmount = await db.collection('votes').find(
+                { choiceId: choicesIds[i] }
+            ).toArray();
+            console.log(votesAmount.length);
+
+            if (votesAmount.length > mostVoted) {
+                mostVotedId = choicesIds[i];
+                totalOfVotes = votesAmount.length;
+            };
+        }
+
+        console.log(choices[choicesIds.indexOf(mostVotedId)].title, totalOfVotes);
+        
+        return res.send({_id: id, title: pollTitle, expireAt: pollExpireAt, result: {
+            title: choices[choicesIds.indexOf(mostVotedId)].title, votes: totalOfVotes
+        }}).status(200);
+        
+    } catch (error) {
+        console.log(error);
+        return res.sendStatus(500);
+    }
+}

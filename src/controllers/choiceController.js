@@ -72,7 +72,6 @@ export async function postVote(req, res) {
         console.log(error);
         return res.sendStatus(500);
     }
-
 }
 
 
